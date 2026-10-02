@@ -6,6 +6,8 @@ export const MAX_JARS = 14;
 export const MAX_CAPACITY = 12;
 export const MAX_COLOURS = 14;
 export const MAX_LEVEL_NUMBER = 999999;
+// Slots hold palette colour IDs; palettes have up to 20 colours. colourCount is just how many are in play.
+export const MAX_COLOUR_ID = 20;
 
 const isInt = (n, lo, hi) => Number.isInteger(n) && n >= lo && n <= hi;
 
@@ -44,7 +46,7 @@ export function validateLevel(level) {
     if ('empty' in jar && typeof jar.empty !== 'boolean') return `jar ${i + 1}: empty must be true or false`;
     if (jar.empty && jar.slots.some((s) => s !== null)) return `jar ${i + 1}: an empty jar can't hold colours`;
     for (const s of jar.slots) {
-      if (s !== null && !isInt(s, 1, level.colourCount)) return `jar ${i + 1}: slot must be empty or 1–${level.colourCount}`;
+      if (s !== null && !isInt(s, 1, MAX_COLOUR_ID)) return `jar ${i + 1}: slot must be empty or 1–${MAX_COLOUR_ID}`;
     }
   }
   return null;
@@ -58,19 +60,20 @@ export function resizeLayout(level, specs, colourCount) {
     colourCount,
     jars: specs.map(toSpec).map(({ capacity, empty, from }) => {
       const old = level.jars[from]?.slots ?? [];
-      const slots = Array.from({ length: capacity }, (_, s) => {
-        const v = old[s] ?? null;
-        return v !== null && v <= colourCount ? v : null;
-      });
+      const slots = Array.from({ length: capacity }, (_, s) => old[s] ?? null);
       return makeJar(capacity, empty, slots);
     }),
   };
 }
 
 export function colourCounts(level) {
-  const counts = Array(level.colourCount + 1).fill(0);
+  const counts = Array(MAX_COLOUR_ID + 1).fill(0);
   for (const jar of level.jars) for (const s of jar.slots) if (s !== null) counts[s]++;
   return counts;
+}
+
+export function coloursFound(level) {
+  return colourCounts(level).filter((n) => n > 0).length;
 }
 
 // Units per colour when every jar has the same capacity; unknown otherwise.

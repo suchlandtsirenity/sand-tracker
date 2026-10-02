@@ -36,7 +36,7 @@ level without changing data.
 {
   "type": "normal",          // "normal" | "special"
   "number": 212,
-  "colourCount": 9,          // colours in play this level (IDs 1..colourCount)
+  "colourCount": 9,          // how many colours are in play; slots may use any palette ID 1–20
   "jars": [
     { "capacity": 4, "slots": [3, 3, null, 1] },   // bottom → top; null = unknown
     { "capacity": 4, "slots": [null, null, null, null] },

@@ -71,7 +71,7 @@ test('400 on bad key, invalid level, mismatched key, bad JSON', async () => {
   assert.equal((await fetch(`${base}/api/levels/normal:0`)).status, 400);
   assert.equal((await fetch(`${base}/api/levels/%E0%A4%A`)).status, 400);
   const bad = newLevel('normal', 1, [4], 1);
-  bad.jars[0].slots[0] = 7;
+  bad.jars[0].slots[0] = 21;
   const r1 = await put('/api/levels/normal:1', bad);
   assert.equal(r1.status, 400);
   assert.match((await r1.json()).error, /slot/);

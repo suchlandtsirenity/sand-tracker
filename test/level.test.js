@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   levelKey, parseKey, newLevel, validateLevel, resizeLayout,
   colourCounts, expectedPerColour, setSlot, nextSelection, suggestColourCount,
+  coloursFound, MAX_COLOUR_ID,
 } from '../shared/level.js';
 
 const sample = () => ({
@@ -50,7 +51,7 @@ test('validateLevel rejects malformed levels', () => {
     '15 jars': (l) => { l.jars = Array(15).fill({ capacity: 1, slots: [null] }); return l; },
     'capacity 13': (l) => { l.jars[0] = { capacity: 13, slots: Array(13).fill(null) }; return l; },
     'slots length mismatch': (l) => { l.jars[0].slots.pop(); return l; },
-    'slot above colourCount': (l) => { l.jars[0].slots[3] = 4; return l; },
+    'slot above 20': (l) => { l.jars[0].slots[3] = 21; return l; },
     'slot zero': (l) => { l.jars[0].slots[3] = 0; return l; },
     'slot string': (l) => { l.jars[0].slots[3] = '1'; return l; },
   };
@@ -59,12 +60,12 @@ test('validateLevel rejects malformed levels', () => {
   }
 });
 
-test('resizeLayout keeps slots that fit and drops out-of-range colours', () => {
+test('resizeLayout keeps slots that fit, even colour IDs above the colour count', () => {
   const out = resizeLayout(sample(), [2, 6], 2);
   assert.equal(out.colourCount, 2);
   assert.deepEqual(out.jars, [
     { capacity: 2, slots: [1, 2] },
-    { capacity: 6, slots: [null, null, null, null, null, null] }, // 3s dropped
+    { capacity: 6, slots: [3, 3, null, null, null, null] }, // any palette colour may be in play
   ]);
   assert.equal(validateLevel(out), null);
 });
@@ -84,7 +85,19 @@ test('resizeLayout output is always valid', () => {
 });
 
 test('colourCounts counts each colour ID', () => {
-  assert.deepEqual(colourCounts(sample()), [0, 1, 1, 3]);
+  const counts = colourCounts(sample());
+  assert.deepEqual(counts.slice(0, 4), [0, 1, 1, 3]);
+  assert.equal(counts.length, MAX_COLOUR_ID + 1);
+});
+
+test('validateLevel accepts any palette colour ID, not just 1..colourCount', () => {
+  const l = sample(); l.colourCount = 2; l.jars[2].slots[0] = 17;
+  assert.equal(validateLevel(l), null);
+});
+
+test('coloursFound counts distinct colours entered', () => {
+  assert.equal(coloursFound(sample()), 3);
+  assert.equal(coloursFound(newLevel('normal', 1, [4], 1)), 0);
 });
 
 test('expectedPerColour is the shared capacity, or null when mixed', () => {

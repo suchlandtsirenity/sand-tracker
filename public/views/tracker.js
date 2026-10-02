@@ -1,5 +1,5 @@
 import { h } from '../dom.js';
-import { setSlot, nextSelection, colourCounts, expectedPerColour } from '/shared/level.js';
+import { setSlot, nextSelection, colourCounts, expectedPerColour, coloursFound } from '/shared/level.js';
 import { colourFor, colourName, shortName } from '/shared/palette.js';
 
 const SLOT_PX = 34;
@@ -51,7 +51,11 @@ export function renderTracker(ctx, key, initial) {
     const rows = [jars.slice(0, perRow), jars.slice(perRow)].filter((r) => r.length)
       .map((r) => h('div', { class: 'jar-row', style: { gridTemplateColumns: `repeat(${perRow}, 1fr)` } }, r));
 
-    const swatches = Array.from({ length: level.colourCount }, (_, i) => i + 1).map((id) => h('div', { class: 'swatch-wrap' },
+    // The whole palette is offered, since you can't know a blind level's colours up front.
+    // Colours already entered come first so the ones in play stay close at hand.
+    const ids = Array.from({ length: Math.max(palette.colours.length, counts.findLastIndex((n) => n > 0)) }, (_, i) => i + 1);
+    const ordered = [...ids.filter((id) => counts[id] > 0), ...ids.filter((id) => counts[id] === 0)];
+    const swatches = ordered.map((id) => h('div', { class: 'swatch-wrap' },
       h('button', {
         class: 'swatch', style: { background: colourFor(palette, id) }, disabled: !sel,
         'aria-label': colourName(palette, id) || `Colour ${id}`, onclick: () => fill(id),
@@ -69,7 +73,9 @@ export function renderTracker(ctx, key, initial) {
         h('div', { class: 'swatch-wrap' },
           h('button', { class: 'swatch', disabled: !sel, 'aria-label': 'Clear layer', onclick: () => fill(null) }, '✕'),
           h('small', {}, 'clear'))),
-      h('p', { class: 'muted' }, sel ? 'Pick a colour for the selected layer.' : 'Tap a layer, then a colour.'),
+      h('p', { class: 'muted' },
+        `Found ${coloursFound(level)} of ${level.colourCount} colours. `,
+        sel ? 'Pick a colour for the selected layer.' : 'Tap a layer, then a colour.'),
       h('div', { class: 'row' },
         h('a', { href: `#/level/${encodeURIComponent(key)}/setup` }, 'Edit layout'),
         h('button', { type: 'button', class: 'danger', onclick: remove }, 'Delete level')));
