@@ -65,8 +65,11 @@ level without changing data.
 3. **Tracker:** jars drawn at heights matching their capacity, laid out in up to
    2 rows of 7. Tap a slot to select it, then tap a colour in the palette bar to
    fill it; there's a "clear" swatch to reset it. Each colour shows a
-   found-count badge (e.g. "3/4"; the expected total is shown only when every
-   jar has the same capacity). Saves automatically about 500 ms after each change.
+   found-count badge. When every jar has the same capacity, it shows the expected
+   total too (e.g. "3/4"); with mixed capacities it shows only the found count.
+   Mixed-capacity levels aren't blind in the game, so they're supported for
+   completeness but aren't the main use. Saves automatically about 500 ms after
+   each change.
 4. **Palette config:** list palettes; add, rename, or delete them; edit colours
    with `<input type="color">` and add/remove colour entries; choose the active
    palette. The active palette is remembered per device (localStorage); the
