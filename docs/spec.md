@@ -71,7 +71,7 @@ level without changing data.
    completeness but aren't the main use. Saves automatically about 500 ms after
    each change.
 4. **Palette config:** list palettes; add, rename, or delete them; edit colours
-   with `<input type="color">` and add/remove colour entries; choose the active
+   with `<input type="color">`, add colours, and remove the last colour (removing one from the middle would shift later colour IDs in saved levels); choose the active
    palette. The active palette is remembered per device (localStorage); the
    palettes themselves are stored on the server.
 
@@ -99,7 +99,7 @@ level without changing data.
   dedicated user, bound to `127.0.0.1:8787`.
 - nginx gets a server block for `sand.<domain>` that proxies to it, protected
   with `auth_basic` (htpasswd) and served over TLS via certbot.
-- Backup is a copy of `data/sand.db`.
+- On the server, `DB_PATH=/var/lib/sand-tracker/sand.db` (systemd StateDirectory). Backup is a copy of that file.
 
 ## Error handling
 
