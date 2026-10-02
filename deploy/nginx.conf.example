@@ -1,0 +1,16 @@
+# /etc/nginx/sites-available/sand-tracker. Replace sand.example.com.
+# Then: certbot --nginx -d sand.example.com
+server {
+    listen 80;
+    listen [::]:80;
+    server_name sand.example.com;
+
+    location / {
+        auth_basic "Sand Tracker";
+        auth_basic_user_file /etc/nginx/sand-tracker.htpasswd;
+        proxy_pass http://127.0.0.1:8787;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
