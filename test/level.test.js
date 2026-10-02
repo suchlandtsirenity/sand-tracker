@@ -104,3 +104,13 @@ test('nextSelection moves down one layer and stops at the bottom', () => {
   assert.deepEqual(nextSelection(sample(), { jar: 1, slot: 3 }), { jar: 1, slot: 2 });
   assert.equal(nextSelection(sample(), { jar: 1, slot: 0 }), null);
 });
+
+test('resizeLayout follows source indices when a middle jar is removed', () => {
+  // remove jar 2 (index 1): new jar 2 must carry old jar 3's slots
+  const out = resizeLayout(sample(), [4, 4], 3, [0, 2]);
+  assert.deepEqual(out.jars[0].slots, [1, 2, 3, null]);
+  assert.deepEqual(out.jars[1].slots, [null, null, null, null]); // old jar 3 was empty
+  const out2 = resizeLayout(sample(), [4, 4], 3, [1, null]);
+  assert.deepEqual(out2.jars[0].slots, [3, 3, null, null]);       // old jar 2 moved up
+  assert.deepEqual(out2.jars[1].slots, [null, null, null, null]); // brand-new jar
+});

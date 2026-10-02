@@ -52,5 +52,6 @@ export function createSaver({ save, delay = 500, initialBackoff = 1000, maxBacko
       return run();
     },
     peek: (key) => pending.get(key),
+    discard: (key) => { pending.delete(key); },
   };
 }

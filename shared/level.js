@@ -42,12 +42,13 @@ export function validateLevel(level) {
 }
 
 // Re-shape a level, keeping the bottom slots of each jar that still fit.
-export function resizeLayout(level, capacities, colourCount) {
+// sources[i] is the old jar index that new jar i came from, or null for a new jar.
+export function resizeLayout(level, capacities, colourCount, sources = capacities.map((_, i) => i)) {
   return {
     ...level,
     colourCount,
     jars: capacities.map((capacity, i) => {
-      const old = level.jars[i]?.slots ?? [];
+      const old = level.jars[sources[i]]?.slots ?? [];
       const slots = Array.from({ length: capacity }, (_, s) => {
         const v = old[s] ?? null;
         return v !== null && v <= colourCount ? v : null;

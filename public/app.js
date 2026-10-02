@@ -45,6 +45,8 @@ async function route() {
       const level = saver.peek(key) ?? await api.getLevel(key);
       el = parts[2] === 'setup' || !level ? renderSetup(ctx, key, level) : renderTracker(ctx, key, level);
     } else if (parts[0] === 'palettes') {
+      // Fresh copy: saving replaces the whole list, so never edit stale or fallback palettes.
+      state.palettes = await api.getPalettes();
       el = renderPalettes(ctx);
     } else {
       el = renderPicker(ctx, await api.listLevels());

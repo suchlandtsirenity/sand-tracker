@@ -21,7 +21,8 @@ export function renderTracker(ctx, key, initial) {
   async function remove() {
     if (!confirm(`Delete ${level.type} ${level.number}?`)) return;
     try {
-      await ctx.saver.flush();
+      await ctx.saver.flush();    // let any in-flight save land first…
+      ctx.saver.discard(key);     // …then drop queued changes so they can't resurrect it
       await ctx.api.deleteLevel(key);
       ctx.go('/');
     } catch (e) {
@@ -50,7 +51,7 @@ export function renderTracker(ctx, key, initial) {
     const swatches = Array.from({ length: level.colourCount }, (_, i) => i + 1).map((id) => h('button', {
       class: 'swatch', style: { background: colourFor(palette, id) }, disabled: !sel,
       'aria-label': `Colour ${id}`, onclick: () => fill(id),
-    }, h('span', { class: 'badge' }, expected ? `${counts[id]}/${expected}` : String(counts[id]))));
+    }, String(id), h('span', { class: 'badge' }, expected ? `${counts[id]}/${expected}` : String(counts[id]))));
 
     root.replaceChildren(
       h('div', { class: 'bar' },

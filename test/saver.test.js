@@ -78,3 +78,14 @@ test('flush saves immediately without waiting for the debounce', async () => {
   await s.flush();
   assert.deepEqual(saves, [{ n: 1 }]);
 });
+
+test('discard drops a pending change so it is never saved', async () => {
+  const saves = [];
+  const s = createSaver({ save: async (k, v) => { saves.push([k, v]); }, delay: 10 });
+  s.schedule('normal:1', { n: 1 });
+  s.schedule('normal:2', { n: 2 });
+  s.discard('normal:1');
+  assert.equal(s.peek('normal:1'), undefined);
+  await wait(50);
+  assert.deepEqual(saves, [['normal:2', { n: 2 }]]);
+});
