@@ -18,10 +18,17 @@ export function parseKey(key) {
   return m ? { type: m[1], number: Number(m[2]) } : null;
 }
 
-export function newLevel(type, number, capacities, colourCount) {
+// A jar spec is a capacity number or { capacity, empty?, from? }.
+const toSpec = (spec, i) => (typeof spec === 'number' ? { capacity: spec, from: i } : { from: i, ...spec });
+
+// Jars that start empty get `empty: true`; others omit the key.
+const makeJar = (capacity, empty, slots) =>
+  (empty ? { capacity, slots: Array(capacity).fill(null), empty: true } : { capacity, slots });
+
+export function newLevel(type, number, specs, colourCount) {
   return {
     type, number, colourCount,
-    jars: capacities.map((capacity) => ({ capacity, slots: Array(capacity).fill(null) })),
+    jars: specs.map(toSpec).map(({ capacity, empty }) => makeJar(capacity, empty, Array(capacity).fill(null))),
   };
 }
 
@@ -34,6 +41,8 @@ export function validateLevel(level) {
   for (const [i, jar] of level.jars.entries()) {
     if (!jar || !isInt(jar.capacity, 1, MAX_CAPACITY)) return `jar ${i + 1}: capacity must be 1–${MAX_CAPACITY}`;
     if (!Array.isArray(jar.slots) || jar.slots.length !== jar.capacity) return `jar ${i + 1}: slots must match capacity`;
+    if ('empty' in jar && typeof jar.empty !== 'boolean') return `jar ${i + 1}: empty must be true or false`;
+    if (jar.empty && jar.slots.some((s) => s !== null)) return `jar ${i + 1}: an empty jar can't hold colours`;
     for (const s of jar.slots) {
       if (s !== null && !isInt(s, 1, level.colourCount)) return `jar ${i + 1}: slot must be empty or 1–${level.colourCount}`;
     }
@@ -42,18 +51,18 @@ export function validateLevel(level) {
 }
 
 // Re-shape a level, keeping the bottom slots of each jar that still fit.
-// sources[i] is the old jar index that new jar i came from, or null for a new jar.
-export function resizeLayout(level, capacities, colourCount, sources = capacities.map((_, i) => i)) {
+// A spec's `from` is the old jar index it came from (null for a new jar; defaults to its position).
+export function resizeLayout(level, specs, colourCount) {
   return {
     ...level,
     colourCount,
-    jars: capacities.map((capacity, i) => {
-      const old = level.jars[sources[i]]?.slots ?? [];
+    jars: specs.map(toSpec).map(({ capacity, empty, from }) => {
+      const old = level.jars[from]?.slots ?? [];
       const slots = Array.from({ length: capacity }, (_, s) => {
         const v = old[s] ?? null;
         return v !== null && v <= colourCount ? v : null;
       });
-      return { capacity, slots };
+      return makeJar(capacity, empty, slots);
     }),
   };
 }
@@ -66,8 +75,15 @@ export function colourCounts(level) {
 
 // Units per colour when every jar has the same capacity; unknown otherwise.
 export function expectedPerColour(level) {
-  const caps = new Set(level.jars.map((j) => j.capacity));
+  const caps = new Set(level.jars.filter((j) => !j.empty).map((j) => j.capacity));
   return caps.size === 1 ? [...caps][0] : null;
+}
+
+// Every colour fills exactly one jar, so with uniform filled jars: colours = filled jars.
+export function suggestColourCount(specs) {
+  const filled = specs.filter((j) => !j.empty);
+  const caps = new Set(filled.map((j) => j.capacity));
+  return caps.size === 1 ? Math.min(filled.length, MAX_COLOURS) : null;
 }
 
 export function setSlot(level, jarIndex, slotIndex, value) {

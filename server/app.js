@@ -49,9 +49,12 @@ async function readJson(req) {
   try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { throw new HttpError(400, 'invalid JSON'); }
 }
 
-const cleanLevel = ({ type, number, colourCount, jars }) =>
-  ({ type, number, colourCount, jars: jars.map(({ capacity, slots }) => ({ capacity, slots })) });
-const cleanPalettes = (list) => list.map(({ id, name, colours }) => ({ id, name, colours }));
+const cleanLevel = ({ type, number, colourCount, jars }) => ({
+  type, number, colourCount,
+  jars: jars.map(({ capacity, slots, empty }) => (empty ? { capacity, slots, empty } : { capacity, slots })),
+});
+const cleanPalettes = (list) => list.map(({ id, name, colours, names }) =>
+  (names ? { id, name, colours, names } : { id, name, colours }));
 
 async function handleApi(req, res, pathname, db) {
   const [, , resource, rawKey, extra] = pathname.split('/');

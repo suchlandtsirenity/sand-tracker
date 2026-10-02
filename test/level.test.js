@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   levelKey, parseKey, newLevel, validateLevel, resizeLayout,
-  colourCounts, expectedPerColour, setSlot, nextSelection,
+  colourCounts, expectedPerColour, setSlot, nextSelection, suggestColourCount,
 } from '../shared/level.js';
 
 const sample = () => ({
@@ -107,10 +107,47 @@ test('nextSelection moves down one layer and stops at the bottom', () => {
 
 test('resizeLayout follows source indices when a middle jar is removed', () => {
   // remove jar 2 (index 1): new jar 2 must carry old jar 3's slots
-  const out = resizeLayout(sample(), [4, 4], 3, [0, 2]);
+  const out = resizeLayout(sample(), [{ capacity: 4, from: 0 }, { capacity: 4, from: 2 }], 3);
   assert.deepEqual(out.jars[0].slots, [1, 2, 3, null]);
   assert.deepEqual(out.jars[1].slots, [null, null, null, null]); // old jar 3 was empty
-  const out2 = resizeLayout(sample(), [4, 4], 3, [1, null]);
+  const out2 = resizeLayout(sample(), [{ capacity: 4, from: 1 }, { capacity: 4, from: null }], 3);
   assert.deepEqual(out2.jars[0].slots, [3, 3, null, null]);       // old jar 2 moved up
   assert.deepEqual(out2.jars[1].slots, [null, null, null, null]); // brand-new jar
+});
+
+test('newLevel accepts jar specs with an empty flag', () => {
+  const lvl = newLevel('normal', 593, [4, { capacity: 4, empty: true }], 1);
+  assert.deepEqual(lvl.jars, [
+    { capacity: 4, slots: [null, null, null, null] },
+    { capacity: 4, slots: [null, null, null, null], empty: true },
+  ]);
+  assert.equal(validateLevel(lvl), null);
+});
+
+test('validateLevel rejects a non-boolean empty flag or colours in an empty jar', () => {
+  const a = sample(); a.jars[2].empty = 'yes';
+  assert.equal(typeof validateLevel(a), 'string');
+  const b = sample(); b.jars[0].empty = true; // jar 0 has colours
+  assert.equal(typeof validateLevel(b), 'string');
+  const c = sample(); c.jars[2].empty = true;
+  assert.equal(validateLevel(c), null);
+});
+
+test('resizeLayout marks empty jars and clears their slots', () => {
+  const out = resizeLayout(sample(), [{ capacity: 4 }, { capacity: 4, empty: true }], 3);
+  assert.deepEqual(out.jars[1], { capacity: 4, slots: [null, null, null, null], empty: true });
+  assert.equal('empty' in out.jars[0], false);
+  assert.equal(validateLevel(out), null);
+});
+
+test('expectedPerColour ignores empty jars', () => {
+  const lvl = newLevel('special', 1, [3, 3, { capacity: 8, empty: true }], 2);
+  assert.equal(expectedPerColour(lvl), 3);
+});
+
+test('suggestColourCount = filled jars when they share a capacity', () => {
+  const std = [...Array(12).fill({ capacity: 4 }), { capacity: 4, empty: true }, { capacity: 4, empty: true }];
+  assert.equal(suggestColourCount(std), 12);
+  assert.equal(suggestColourCount([{ capacity: 3 }, { capacity: 8 }]), null);
+  assert.equal(suggestColourCount([{ capacity: 4, empty: true }]), null);
 });

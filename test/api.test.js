@@ -48,6 +48,12 @@ test('unknown fields are stripped before storage', async () => {
   assert.deepEqual(got, newLevel('normal', 5, [4], 1));
 });
 
+test('empty-jar flags survive storage', async () => {
+  const lvl = newLevel('normal', 593, [4, { capacity: 4, empty: true }], 1);
+  assert.equal((await put('/api/levels/normal:593', lvl)).status, 200);
+  assert.deepEqual(await (await fetch(`${base}/api/levels/normal:593`)).json(), lvl);
+});
+
 test('list returns saved levels', async () => {
   await put('/api/levels/special:3', newLevel('special', 3, [8], 1));
   const list = await (await fetch(`${base}/api/levels`)).json();
@@ -87,6 +93,9 @@ test('palettes GET and PUT with validation', async () => {
   assert.deepEqual(await (await fetch(`${base}/api/palettes`)).json(),
     [{ id: 'p1', name: 'Pastel', colours: ['#ffcccc'] }]);
   assert.equal((await put('/api/palettes', [])).status, 400);
+  const named = [{ id: 'n', name: 'Named', colours: ['#ff0000'], names: ['Red'] }];
+  assert.equal((await put('/api/palettes', named)).status, 200);
+  assert.deepEqual(await (await fetch(`${base}/api/palettes`)).json(), named);
 });
 
 test('405 for a wrong method, 404 for an unknown API path', async () => {

@@ -16,6 +16,17 @@ export function colourFor(palette, id) {
   return palette?.colours?.[id - 1] ?? FALLBACK_COLOUR;
 }
 
+// Optional per-palette names; names[i] goes with colours[i].
+export function colourName(palette, id) {
+  return palette?.names?.[id - 1]?.trim() ?? '';
+}
+
+// Slot label: first three letters of the name ("Pur"), or the ID if unnamed.
+export function shortName(palette, id) {
+  const name = colourName(palette, id);
+  return name ? name[0].toUpperCase() + name.slice(1, 3) : String(id);
+}
+
 export function validatePalettes(list) {
   if (!Array.isArray(list) || list.length < 1) return 'need at least one palette';
   const ids = new Set();
@@ -27,6 +38,10 @@ export function validatePalettes(list) {
     if (typeof p.name !== 'string' || !p.name.trim() || p.name.length > 40) return 'palette name must be 1–40 characters';
     if (!Array.isArray(p.colours) || p.colours.length < 1 || p.colours.length > 20) return 'a palette needs 1–20 colours';
     if (!p.colours.every((c) => typeof c === 'string' && HEX.test(c))) return 'colours must look like #rrggbb';
+    if (p.names !== undefined) {
+      if (!Array.isArray(p.names) || p.names.length > p.colours.length) return 'names must be a list no longer than colours';
+      if (!p.names.every((n) => typeof n === 'string' && n.length <= 20)) return 'colour names must be up to 20 characters';
+    }
   }
   return null;
 }
