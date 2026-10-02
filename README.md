@@ -10,10 +10,14 @@ See `docs/spec.md`.
 
 Needs Node ≥ 22.5. No npm dependencies.
 
+On the server, the service uses a private Node 22 in `/opt/sand-tracker/node/`
+(the system Node is older and shared with other apps). The rsync commands below
+exclude it.
+
 ## Deploy (Debian/Ubuntu + nginx)
 
     sudo useradd --system --no-create-home sandtracker
-    sudo rsync -a --exclude data --exclude .git --exclude .superpowers ./ /opt/sand-tracker/
+    sudo rsync -a --exclude data --exclude .git --exclude .superpowers --exclude node ./ /opt/sand-tracker/
     sudo cp deploy/sand-tracker.service /etc/systemd/system/
     sudo systemctl daemon-reload && sudo systemctl enable --now sand-tracker
     curl -s localhost:8787/api/palettes          # sanity check
@@ -29,5 +33,5 @@ Data lives in `/var/lib/sand-tracker/sand.db`. Back it up by copying that file.
 
 ## Update
 
-    sudo rsync -a --exclude data --exclude .git --exclude .superpowers ./ /opt/sand-tracker/
+    sudo rsync -a --exclude data --exclude .git --exclude .superpowers --exclude node ./ /opt/sand-tracker/
     sudo systemctl restart sand-tracker
