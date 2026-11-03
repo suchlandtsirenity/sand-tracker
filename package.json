@@ -1,8 +1,11 @@
 {
   "name": "sand-tracker",
   "private": true,
+  "license": "MIT",
   "type": "module",
-  "engines": { "node": ">=22.5" },
+  "engines": {
+    "node": ">=22.5"
+  },
   "scripts": {
     "start": "node --experimental-sqlite server.js",
     "test": "node --experimental-sqlite --test"
