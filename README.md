@@ -41,8 +41,10 @@ The app was built AI-first, with a paper trail:
 3. Each task built by an agent, tested, and committed before the next. Judgment
    calls were logged as rulings, each with a "cost if wrong".
 4. A final review by a fresh agent with no context from the build. All five
-   important findings were fixed, with tests that failed before the fix and
-   pass after. The six minor ones were written down and deliberately deferred.
+   important findings were fixed. The two logic bugs got tests that failed
+   before the fix and pass after; the rest were checked in a headless browser or
+   by the save-queue tests. The six minor ones were written down and
+   deliberately deferred.
 
 The [build log](docs/build-log.md) has all of it: the interface checks, every
 ruling, and each review finding with how it was fixed.
