@@ -66,6 +66,12 @@ The rsync commands below exclude it.
 ```sh
 sudo useradd --system --no-create-home sandtracker
 sudo rsync -a --exclude data --exclude .git --exclude .superpowers --exclude node ./ /opt/sand-tracker/
+
+# Private Node 22 (use linux-arm64 on ARM; needs xz-utils)
+NODE=v22.23.4
+sudo mkdir -p /opt/sand-tracker/node
+curl -fsSL https://nodejs.org/dist/$NODE/node-$NODE-linux-x64.tar.xz | sudo tar -xJ --strip-components=1 -C /opt/sand-tracker/node
+
 sudo cp deploy/sand-tracker.service /etc/systemd/system/
 sudo systemctl daemon-reload && sudo systemctl enable --now sand-tracker
 curl -s localhost:8787/api/palettes          # sanity check
